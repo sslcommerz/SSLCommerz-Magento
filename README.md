@@ -1,4 +1,4 @@
-# SSLCOMMERZ_Magento
+# SSLCommerz V4 API With IPN For Magento V1.9.X 
 SSLCOMMERZ-Online Payment Gateway For Bangladesh
 
 
@@ -25,4 +25,12 @@ Please follow these steps to install the SSLCOMMERZ Payment Gateway module.
 8. Click Save Config.
 
 
-More info: https://www.sslcommerz.com
+For any issue, feel free to contact any time.
+
+- Author : SSLCommerz
+- Developed By : Prabal Mallick
+- Team-Email: integration@sslcommerz.com 
+- More info: https://www.sslcommerz.com
+
+
+© 2019 SSLCOMMERZ ALL RIGHTS RESERVED

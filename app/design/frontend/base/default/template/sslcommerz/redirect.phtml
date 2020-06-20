@@ -1,109 +1,155 @@
 <?php
 // Retrieve order
 
-$serverType = array('1'=>'https://sandbox.sslcommerz.com/gwprocess/v3/process.php','2'=>'https://securepay.sslcommerz.com/gwprocess/v3/process.php');
+	$serverType = array('1'=>'https://sandbox.sslcommerz.com/gwprocess/v4/api.php','2'=>'https://securepay.sslcommerz.com/gwprocess/v4/api.php');
 
-$validUrl = array('1'=>'https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php', '2'=>'https://securepay.sslcommerz.com/validator/api/validationserverAPI.php');
+	$validUrl = array('1'=>'https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php', '2'=>'https://securepay.sslcommerz.com/validator/api/validationserverAPI.php');
 
-$_order = new Mage_Sales_Model_Order();
-$orderId = Mage::getSingleton('checkout/session')->getLastRealOrderId();
-$_order->loadByIncrementId($orderId);
-$order = Mage::getModel('sales/order')->loadByIncrementId($orderId);
-$billingaddress = $order->getBillingAddress();
-$shippingaddress = $order->getShippingAddress();
-$prodetail= $order->getQuote();
-$currencyDesc = Mage::app()->getStore()->getCurrentCurrencyCode(); 
-$address = $billingaddress->getStreet();
-$address1 = $shippingaddress->getStreet();
-$url_success = Mage::getUrl('sslcommerz/payment/response', array('_secure'=>true));
-$url_fail = Mage::getUrl('sslcommerz/payment/response', array('_secure'=>true));
-$url_cancel = Mage::getUrl('sslcommerz/payment/cancel', array('_secure'=>true));
+	$_order = new Mage_Sales_Model_Order();
+	$orderId = Mage::getSingleton('checkout/session')->getLastRealOrderId();
+	$_order->loadByIncrementId($orderId);
+	$order = Mage::getModel('sales/order')->loadByIncrementId($orderId);
+	$billingaddress = $order->getBillingAddress();
+	$shippingaddress = $order->getShippingAddress();
+	$prodetail= $order->getQuote();
+	$currencyDesc = Mage::app()->getStore()->getCurrentCurrencyCode(); 
+	$address = $billingaddress->getStreet();
+	$address1 = $shippingaddress->getStreet();
+	$url_success = Mage::getUrl('sslcommerz/payment/response', array('_secure'=>true));
+	$url_fail = Mage::getUrl('sslcommerz/payment/response', array('_secure'=>true));
+	$url_cancel = Mage::getUrl('sslcommerz/payment/cancel', array('_secure'=>true));
+	$ipn_url = Mage::getUrl('sslcommerz/payment/ipn', array('_secure'=>true));
 
-$marchent_id = Mage::getStoreConfig('payment/sslcommerz/marchent');
-$items = Mage::getModel('checkout/cart')->getQuote()->getAllItems();
-$totalItems = Mage::getModel('checkout/cart')->getQuote()->getItemsCount();
-$totalQuantity = Mage::getModel('checkout/cart')->getQuote()->getItemsQty();
-$password = Mage::getStoreConfig('payment/sslcommerz/signaturekey');
-$marchenturl = Mage::getStoreConfig('payment/sslcommerz/marchenturl');
-$currentUrl = Mage::helper('core/url')->getCurrentUrl();
-$items = $order->getAllItems();
-$itemcount=count($items);
-$name=array();
-$unitPrice=array();
-$sku=array();
-$ids=array();
-$qty=array();
-foreach ($items as $itemId => $item)
-{
-    $name[] = $item->getName();
-    $unitPrice[]=$item->getPrice();
-    $sku[]=$item->getSku();
-    $ids[]=$item->getProductId();
-    $qty[]=$item->getQtyToInvoice();
-}
+	$marchent_id = Mage::getStoreConfig('payment/sslcommerz/marchent');
+	$items = Mage::getModel('checkout/cart')->getQuote()->getAllItems();
+	$totalItems = Mage::getModel('checkout/cart')->getQuote()->getItemsCount();
+	$totalQuantity = Mage::getModel('checkout/cart')->getQuote()->getItemsQty();
+	$password = Mage::getStoreConfig('payment/sslcommerz/signaturekey');
+	$marchenturl = Mage::getStoreConfig('payment/sslcommerz/marchenturl');
+	$currentUrl = Mage::helper('core/url')->getCurrentUrl();
+	$items = $order->getAllItems();
+	$itemcount=count($items);
+	$name=array();
+	$unitPrice=array();
+	$sku=array();
+	$ids=array();
+	$qty=array();
+	foreach ($items as $itemId => $item)
+	{
+	    $name[] = $item->getName();
+	    $unitPrice[]=$item->getPrice();
+	    $sku[]=$item->getSku();
+	    $ids[]=$item->getProductId();
+	    $qty[]=$item->getQtyToInvoice();
+	}
 
-$productname = implode(',',$name);
-$productunitPrice= implode(',',$unitPrice);
-$productsku= implode(',',$sku);
-$productids= implode(',',$ids);
-$productqty= implode(',',$qty);
-$desc = 'Product Name: '.$productname.'@ Product Sku: '.$productsku.'@ Product Quantity: '. $productqty.'@ Product Price: '.$productunitPrice;
-
-
-$helperData = Mage::helper('sslcommerz'); 
+	$productname = implode(',',$name);
+	$productunitPrice= implode(',',$unitPrice);
+	$productsku= implode(',',$sku);
+	$productids= implode(',',$ids);
+	$productqty= implode(',',$qty);
+	$desc = 'Product Name: '.$productname.'@ Product Sku: '.$productsku.'@ Product Quantity: '. $productqty.'@ Product Price: '.$productunitPrice;
 
 
+	$helperData = Mage::helper('sslcommerz'); 
 
+	$methods = Mage::getSingleton('shipping/config')->getActiveCarriers();
+	$shipMethods = array();
+	foreach ($methods as $shippigCode=>$shippingModel) 
+	{
+	    $shippingTitle = Mage::getStoreConfig('carriers/'.$shippigCode.'/title');
+	    $shipMethods[$shippigCode] = $shippingTitle;
+	}
 
-$url = $serverType[$marchenturl];
-$vurl = $validUrl[$marchenturl];
+	$url = $serverType[$marchenturl];
+	$vurl = $validUrl[$marchenturl];
 
-$fields = array( 
-'store_id' => $marchent_id, 
-'total_amount' => $_order->getBaseGrandTotal(),  
-'currency' => $currencyDesc, 
-'tran_id' => $orderId, 
-'cus_name' => $order->getCustomerFirstname().' '.$order->getCustomerLastname(), 
-'cus_email' => $order->getCustomerEmail(),
-'cus_add1' => $address[0], 
-'cus_add2' => $address[1], 
-'cus_city' => $billingaddress->getCity(), 
-'cus_state' => $billingaddress->getRegion(), 
-'cus_postcode' => $billingaddress->getPostcode(), 
-'cus_country' => $billingaddress->getCountryId(), 
-'cus_phone' => $billingaddress->getTelephone(), 
-'cus_fax' => 'NotApplicable', 
-'ship_name' => $shippingaddress->getCustomerFirstname().' '.$shippingaddress->getCustomerLastname(), 
-'ship_add1' => $address1[0], 
-'ship_add2' => $address1[1], 
-'ship_city' => $shippingaddress->getCity(), 
-'ship_state' => $shippingaddress->getRegion(), 
-'ship_postcode' => $shippingaddress->getPostcode(), 
-'ship_country' => $shippingaddress->getCountryId(), 
-'success_url' => $url_success, 
-'fail_url' => $url_fail, 
-'cancel_url' => $url_cancel
- 
-); 
- 
-$security_key = $helperData->sslcommerz_hash_key($password, $fields);
+	$post_data = array();
+	$post_data['store_id'] = $marchent_id; 
+	$post_data['store_passwd'] = $password; 
+	$post_data['total_amount'] = $_order->getBaseGrandTotal();  
+	$post_data['currency'] = $currencyDesc; 
+	$post_data['tran_id'] = $orderId; 
+	$post_data['success_url'] = $url_success; 
+	$post_data['fail_url'] = $url_fail; 
+	$post_data['cancel_url'] = $url_cancel;
+	$post_data['ipn_url'] = $ipn_url;
+	$post_data['cus_name'] = $order->getCustomerFirstname().' '.$order->getCustomerLastname(); 
+	$post_data['cus_email'] = $order->getCustomerEmail();
+	$post_data['cus_add1'] = $address[0]; 
+	$post_data['cus_add2'] = $address[1]; 
+	$post_data['cus_city'] = $billingaddress->getCity(); 
+	$post_data['cus_state'] = $billingaddress->getRegion(); 
+	$post_data['cus_postcode'] = $billingaddress->getPostcode(); 
+	$post_data['cus_country'] = $billingaddress->getCountryId(); 
+	$post_data['cus_phone'] = $billingaddress->getTelephone(); 
+	$post_data['cus_fax'] = 'NotApplicable'; 
 
-$fields['verify_sign'] = $security_key['verify_sign'];
-$fields['verify_key'] = $security_key['verify_key'];
+	if($shipMethods != "") 
+	{
+		$ship = "YES";
+		$post_data['ship_name'] = $shippingaddress->getName(); 
+		$post_data['ship_add1'] = $address1[0]; 
+		$post_data['ship_add2'] = $address1[1]; 
+		$post_data['ship_city'] = $shippingaddress->getCity(); 
+		$post_data['ship_state'] = $shippingaddress->getRegion(); 
+		$post_data['ship_postcode'] = $shippingaddress->getPostcode(); 
+		$post_data['ship_country'] = $shippingaddress->getCountryId(); 
+	} 
+	else 
+	{
+		$ship = "NO";
+	}
+
+	$post_data['shipping_method']   = $ship;
+	$post_data['num_of_item']       = $productqty;
+	$post_data['product_name']      = $productname;
+	$post_data['product_category']  = 'Ecommerce';
+	$post_data['product_profile']   = 'general';
+
+	$security_key = $helperData->sslcommerz_hash_key($password, $post_data);
+
+	$post_data['verify_sign'] = $security_key['verify_sign'];
+	$post_data['verify_key'] = $security_key['verify_key'];
+
+	$handle = curl_init();
+	curl_setopt($handle, CURLOPT_URL, $url );
+	curl_setopt($handle, CURLOPT_TIMEOUT, 30);
+	curl_setopt($handle, CURLOPT_CONNECTTIMEOUT, 30);
+	curl_setopt($handle, CURLOPT_POST, 1 );
+	curl_setopt($handle, CURLOPT_POSTFIELDS, $post_data);
+	curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($handle, CURLOPT_SSL_VERIFYPEER, FALSE); # KEEP IT FALSE IF YOU RUN FROM LOCAL PC
+	
+	$content = curl_exec($handle );
+
+	$code = curl_getinfo($handle, CURLINFO_HTTP_CODE);
+
+	if($code == 200 && !( curl_errno($handle))) {
+		curl_close( $handle);
+		$sslcommerzResponse = $content;
+	} else {
+		curl_close( $handle);
+		echo "FAILED TO CONNECT WITH SSLCOMMERZ API";
+		exit;
+	}
+
+	# PARSE THE JSON RESPONSE
+	$sslcz = json_decode($sslcommerzResponse, true );
+
+	// echo $url;
+	// echo "<pre>";
+	// print_r($sslcz);exit;
+
+	if(isset($sslcz['GatewayPageURL']) && $sslcz['GatewayPageURL']!="" ) 
+	{
+		echo "<meta http-equiv='refresh' content='0;url=".$sslcz['GatewayPageURL']."'>";
+		exit;
+	} 
+	else 
+	{
+		echo $sslcz['failedreason'];
+	}
 
 ?>
-
-<form name="mygatewayform" method="post" action="<?php echo $url; ?>">
-<?php
-foreach($fields as $key=>$value){
-echo "<input type='hidden' name='".$key."' value='".$value."' />\n";
-}
-
-?>
-
-</form>
-<script type="text/javascript">
-document.mygatewayform.submit();
-</script>
-
 
