@@ -1,14 +1,14 @@
-## SSLCOMMERZ - Magento
+## SSLCommerz - Magento
 
 SSLCOMMERZ-Online Payment Gateway For Bangladesh
 
-This Module Work for Magento Version 2.1.* - 2.2.*
+This Module Work for Magento Version 2.3.x
 
 ### Installation Steps
 
 Please follow these steps to install the SSLCOMMERZ Payment Gateway module.
 
-Step 1: Download module from Github.
+Step 1: Download module from github.
 
 Step 2: Log in to your server using FTP or Cpanel.
 
@@ -31,8 +31,8 @@ Step 9: Navigate to STORES > Configuration > SALES > Payment Methods > Other Pay
 - New Order Status : Pending Payment.
 - Test Mode : Yes (If No then Make it Yes).
 - Allowed Shipping Methods : Your Shipping Methods if have any.
-- Merchant ID : Your Valid Merchant ID Provided from SSL Wireless.
-- API Password : Your Valid Password Provided from SSL Wireless.
+- Store/API ID : Your Valid Store/API ID Provided from SSL Wireless.
+- Store/API Password : Your Store/API Password Provided from SSL Wireless.
 - Payment from Applicable Countries : Default / If haven't any. 
 - Payment from Specific Countries : Default / If haven't any. 
 - Instructions : Your Instructions.
@@ -54,9 +54,8 @@ For any issue, feel free to contact any time.
 
 - Author : SSLCommerz
 - Developed By : Prabal Mallick
-- Email : prabal.mallick@sslwireless.com
 - Team-Email: integration@sslcommerz.com 
 - More info: https://www.sslcommerz.com
 
 
-© 2017 SSLCOMMERZ ALL RIGHTS RESERVED
+© 2019 SSLCOMMERZ ALL RIGHTS RESERVED

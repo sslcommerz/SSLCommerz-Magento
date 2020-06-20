@@ -1,13 +1,10 @@
 <?php if($block->getPaymentMethod() == $block->getConfigPaymentData()) {?>
 <div class="rk button">
-<form action="<?php echo $block->getGateUrl(); ?>" method="POST" name="mygatewayform">
-<?php foreach($block->getPostData() as $key=>$value): ?>
-	<input type="hidden" name="<?php echo $key; ?>" value="<?php echo $value; ?>"></input>
-<?php endforeach; ?>
-	<!-- <button type="submit">Pay</button> -->
-</form>
-</div>
-<script type="text/javascript">
-	document.mygatewayform.submit();
-</script>
+	
+<?php
+	# echo "<script>window.location.href = '". $sslcz['GatewayPageURL'] ."';</script>";
+	echo "<meta http-equiv='refresh' content='0;url=".$block->getPostData()."'>";
+	# header("Location: ". $sslcz['GatewayPageURL']);
+?>
+
 <?php } ?>

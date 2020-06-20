@@ -8,7 +8,7 @@ namespace Sslwireless\Sslcommerz\Block\Form;
 /**
  * Abstract class for Cash On Delivery and Bank Transfer payment method form
  */
-abstract class Sslcommerz extends \Magento\Payment\Block\Form
+class Sslcommerz extends \Magento\Payment\Block\Form
 {
     /**
      * Instructions text
