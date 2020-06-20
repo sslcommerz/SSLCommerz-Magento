@@ -1,28 +1,53 @@
-# SSLCommerz V4 API With IPN For Magento V1.9.X 
+SSLCOMMERZ- Magento
+---------------------------------------------------------------------------------
+
 SSLCOMMERZ-Online Payment Gateway For Bangladesh
 
+This Module Work for Magento Version 2.0.* - 2.1.*
 
-This Module Only Work for Magento Version 1.9
-
-Installation steps
+Installation Steps
 
 Please follow these steps to install the SSLCOMMERZ Payment Gateway module.
 
-1. Log in to your server using FTP or Cpanel.
+Step 1: Download module from Github .
 
-2. Upload the app.zip file to server root.
+Step 2: Log in to your server using FTP or Cpanel.
 
-3. Unzip the app.zip file.
+Step 3: Upload Sslwireless (Magento 2 Payment Module) inside of app/code dirrectory.
 
-4. Log in to your Magento admin account.
+Step 4: Now go to your server root and Upload cacheflush.php, updatemodule.php.
 
-5. Navigate to System > Configuration > Sales > Payments Method.
+Step 5: Go to browser and run [www.example.com/updatemodule.php] to update your module.
 
-6. Navigate SSLCOMMERZ Payment Gateway. 
+Step 6: Go to browser again and run [www.example.com/cacheflush.php] to flush magento cache.
 
-7. Put your Store ID, Validation Password and Change Server Type Test URL Or Live URL.
+Step 7: Log in to your Magento admin account.
 
-8. Click Save Config.
+Step 8: Navigate to STORES > Configuration > ADVANCED > Advanced : and check Sslwireless_Sslcommerz is Disabled or Enabled. If status Disabled then Enable it and Click on Save Config button.
+
+Step 9: Navigate to STORES > Configuration > SALES > Payment Methods > Other Payment Methods: > SSLCommerz Payment Gateway : then follow below steps
+
+- Enabled : Yes (If No then Make it Yes).
+- Title : Set your own title what you want to see in checkout page.
+- New Order Status : Pending Payment.
+- Test Mode : Yes (If No then Make it Yes).
+- Allowed Shipping Methods : Your Shipping Methods if have any.
+- Merchant ID : Your Valid Merchant ID Provided from SSL Wireless.
+- API Password : Your Valid Password Provided from SSL Wireless.
+- Payment from Applicable Countries : Default / If haven't any. 
+- Payment from Specific Countries : Default / If haven't any. 
+- Instructions : Your Instructions.
+- Sort Order : It can be empty.
+
+Now Click on Save Config button.
+
+Step 10: Navigate to SYSTEM> Cache Management: Select all Cache type and click on Flush Magento Cache. Or you can do step 5 & 6 to update module and flush cache.
+
+Step 11: Now you can test module is working or not. If you can see your payment option at checkout page then you have installed Module successfully :)
+
+Step 12: Do a test transaction.
+
+Thank You!
 
 
 For any issue, feel free to contact any time.
@@ -33,4 +58,4 @@ For any issue, feel free to contact any time.
 - More info: https://www.sslcommerz.com
 
 
-Â© 2019 SSLCOMMERZ ALL RIGHTS RESERVED
+© 2017 SSLCOMMERZ ALL RIGHTS RESERVED
