@@ -1,0 +1,109 @@
+<?php
+// Retrieve order
+
+$serverType = array('1'=>'https://sandbox.sslcommerz.com/gwprocess/v3/process.php','2'=>'https://securepay.sslcommerz.com/gwprocess/v3/process.php');
+
+$validUrl = array('1'=>'https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php', '2'=>'https://securepay.sslcommerz.com/validator/api/validationserverAPI.php');
+
+$_order = new Mage_Sales_Model_Order();
+$orderId = Mage::getSingleton('checkout/session')->getLastRealOrderId();
+$_order->loadByIncrementId($orderId);
+$order = Mage::getModel('sales/order')->loadByIncrementId($orderId);
+$billingaddress = $order->getBillingAddress();
+$shippingaddress = $order->getShippingAddress();
+$prodetail= $order->getQuote();
+$currencyDesc = Mage::app()->getStore()->getCurrentCurrencyCode(); 
+$address = $billingaddress->getStreet();
+$address1 = $shippingaddress->getStreet();
+$url_success = Mage::getUrl('sslcommerz/payment/response', array('_secure'=>true));
+$url_fail = Mage::getUrl('sslcommerz/payment/response', array('_secure'=>true));
+$url_cancel = Mage::getUrl('sslcommerz/payment/cancel', array('_secure'=>true));
+
+$marchent_id = Mage::getStoreConfig('payment/sslcommerz/marchent');
+$items = Mage::getModel('checkout/cart')->getQuote()->getAllItems();
+$totalItems = Mage::getModel('checkout/cart')->getQuote()->getItemsCount();
+$totalQuantity = Mage::getModel('checkout/cart')->getQuote()->getItemsQty();
+$password = Mage::getStoreConfig('payment/sslcommerz/signaturekey');
+$marchenturl = Mage::getStoreConfig('payment/sslcommerz/marchenturl');
+$currentUrl = Mage::helper('core/url')->getCurrentUrl();
+$items = $order->getAllItems();
+$itemcount=count($items);
+$name=array();
+$unitPrice=array();
+$sku=array();
+$ids=array();
+$qty=array();
+foreach ($items as $itemId => $item)
+{
+    $name[] = $item->getName();
+    $unitPrice[]=$item->getPrice();
+    $sku[]=$item->getSku();
+    $ids[]=$item->getProductId();
+    $qty[]=$item->getQtyToInvoice();
+}
+
+$productname = implode(',',$name);
+$productunitPrice= implode(',',$unitPrice);
+$productsku= implode(',',$sku);
+$productids= implode(',',$ids);
+$productqty= implode(',',$qty);
+$desc = 'Product Name: '.$productname.'@ Product Sku: '.$productsku.'@ Product Quantity: '. $productqty.'@ Product Price: '.$productunitPrice;
+
+
+$helperData = Mage::helper('sslcommerz'); 
+
+
+
+
+$url = $serverType[$marchenturl];
+$vurl = $validUrl[$marchenturl];
+
+$fields = array( 
+'store_id' => $marchent_id, 
+'total_amount' => $_order->getBaseGrandTotal(),  
+'currency' => $currencyDesc, 
+'tran_id' => $orderId, 
+'cus_name' => $order->getCustomerFirstname().' '.$order->getCustomerLastname(), 
+'cus_email' => $order->getCustomerEmail(),
+'cus_add1' => $address[0], 
+'cus_add2' => $address[1], 
+'cus_city' => $billingaddress->getCity(), 
+'cus_state' => $billingaddress->getRegion(), 
+'cus_postcode' => $billingaddress->getPostcode(), 
+'cus_country' => $billingaddress->getCountryId(), 
+'cus_phone' => $billingaddress->getTelephone(), 
+'cus_fax' => 'NotApplicable', 
+'ship_name' => $shippingaddress->getCustomerFirstname().' '.$shippingaddress->getCustomerLastname(), 
+'ship_add1' => $address1[0], 
+'ship_add2' => $address1[1], 
+'ship_city' => $shippingaddress->getCity(), 
+'ship_state' => $shippingaddress->getRegion(), 
+'ship_postcode' => $shippingaddress->getPostcode(), 
+'ship_country' => $shippingaddress->getCountryId(), 
+'success_url' => $url_success, 
+'fail_url' => $url_fail, 
+'cancel_url' => $url_cancel
+ 
+); 
+ 
+$security_key = $helperData->sslcommerz_hash_key($password, $fields);
+
+$fields['verify_sign'] = $security_key['verify_sign'];
+$fields['verify_key'] = $security_key['verify_key'];
+
+?>
+
+<form name="mygatewayform" method="post" action="<?php echo $url; ?>">
+<?php
+foreach($fields as $key=>$value){
+echo "<input type='hidden' name='".$key."' value='".$value."' />\n";
+}
+
+?>
+
+</form>
+<script type="text/javascript">
+document.mygatewayform.submit();
+</script>
+
+
