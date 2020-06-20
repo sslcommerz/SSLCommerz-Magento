@@ -33,17 +33,13 @@ class Response extends \Magento\Framework\App\Action\Action
     public function execute()
     {   //load model
         /* @var $paymentMethod \Magento\Authorizenet\Model\DirectPost */
+        
         $paymentMethod = $this->_objectManager->create('Sslwireless\Sslcommerz\Model\Sslcommerz');
-
-        //get request data
         $data = $this->getRequest()->getPostValue();
-        // print_r($data);
 
-        // $paymentMethod->process($data);
-        //return $this->resultPageFactory->create();
         $paymentMethod->responseAction($data);
         $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
-        // return $resultRedirect->setPath('checkout/onepage/success', ['_secure' => true]);
+        
         return $resultRedirect->setPath('sslcommerz/payment/success', ['_secure' => true]);
     }
 }

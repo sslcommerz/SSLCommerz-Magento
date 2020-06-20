@@ -49,9 +49,9 @@ class Sslcommerz extends AbstractMethod
      */
     protected $_infoBlockType = 'Magento\Payment\Block\Info\Instructions';
 
-    protected $_gateUrl = "https://securepay.sslcommerz.com/gwprocess/v3/api.php";
+    protected $_gateUrl = "https://securepay.sslcommerz.com/gwprocess/v4/api.php";
     
-    protected $_testUrl = "https://sandbox.sslcommerz.com/gwprocess/v3/api.php";
+    protected $_testUrl = "https://sandbox.sslcommerz.com/gwprocess/v4/api.php";
 
     protected $_test;
 
@@ -101,16 +101,16 @@ class Sslcommerz extends AbstractMethod
 
     //@param \Magento\Framework\Object|\Magento\Payment\Model\InfoInterface $payment
     public function getAmount($orderId)//\Magento\Framework\Object $payment)
-    {   //\Magento\Sales\Model\OrderFactory
+    {   
+        //\Magento\Sales\Model\OrderFactory
         $orderFactory=$this->orderFactory;
         /** @var \Magento\Sales\Model\Order $order */
         // $order = $payment->getOrder();
         // $order->getIncrementId();
         /* @var $order \Magento\Sales\Model\Order */
 
-            $order = $orderFactory->create()->loadByIncrementId($orderId);
-            //$payment= $order->getPayment();
-
+        $order = $orderFactory->create()->loadByIncrementId($orderId);
+        //$payment= $order->getPayment();
         // return $payment->getAmount();
         return $order->getGrandTotal();
     }
@@ -233,75 +233,94 @@ class Sslcommerz extends AbstractMethod
             return false;
         }
     }
-
-    public function ipn_hash_varify($store_passwd="", $data="") 
+    
+    public function getSslOrederStatus($orderid)
     {
-        if(isset($data) && isset($data['verify_sign']) && isset($data['verify_key'])) 
+        $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+        $order = $objectManager->create('\Magento\Sales\Model\Order')->loadByIncrementId($orderid);
+        
+        return $order->getStatus();
+    }
+    
+    public function ipnAction($response)
+    {
+        $tran_id = $response['tran_id'];
+        $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+        $order = $objectManager->create('\Magento\Sales\Model\Order')->loadByIncrementId($tran_id);
+        
+        $status = $order->getStatus();
+        
+        if ($this->getConfigData('test')) {
+            $validUrl = "https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php";
+        }
+        else{
+            $validUrl = "https://securepay.sslcommerz.com/validator/api/validationserverAPI.php";
+        }
+
+        $store_id = urlencode($this->getConfigData('merchant_id'));
+	    $password = urlencode($this->getConfigData('pass_word_1'));
+        
+        if($this->_request->getPost()) 
         {
-            # NEW ARRAY DECLARED TO TAKE VALUE OF ALL POST
-            $pre_define_key = explode(',', $data['verify_key']);
-            $new_data = array();
-            if(!empty($pre_define_key )) 
+            if($tran_id !="" && $status == 'pending_payment' && ($response['status'] == 'VALID' || $response['status'] == 'VALIDATED')) 
             {
-                foreach($pre_define_key as $value) 
+                $val_id = urlencode($response['val_id']);
+
+                $requested_url = $validUrl.'?val_id='.$val_id.'&store_id='.$store_id.'&store_passwd='.$password;
+              
+                $handle = curl_init(); 
+                curl_setopt($handle, CURLOPT_URL,$requested_url);
+                curl_setopt($handle, CURLOPT_RETURNTRANSFER,true); 
+
+                $result = curl_exec($handle); 
+
+                $code = curl_getinfo($handle, CURLINFO_HTTP_CODE);
+
+                if($code == 200 && !( curl_errno($handle)))
                 {
-                    if(isset($data[$value])) 
-                    {
-                        $new_data[$value] = ($data[$value]);
-                    }
+                
+                	# TO CONVERT AS ARRAY
+                	# $result = json_decode($result, true);
+                	# $status = $result['status'];
+                
+                	# TO CONVERT AS OBJECT
+                	$result = json_decode($result);
+                
+                	# TRANSACTION INFO
+                	$tran_status = $result->status;
+                	
+                	$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+	                $order = $objectManager->create('Magento\Sales\Model\Order')->loadByIncrementId($tran_id);
+	                $_objectManager = \Magento\Framework\App\ObjectManager::getInstance(); 
+
+	                if($tran_status == 'VALID' || $tran_status == 'VALIDATED')
+	                { 
+	                    $orderState = Order::STATE_PROCESSING;
+	                    $order->setState($orderState, true, 'Payment Validated by IPN')->setStatus($orderState);
+	                    $msg = "Payment Validated by IPN";
+	                }
+	                $order->save();
                 }
             }
-            # ADD MD5 OF STORE PASSWORD
-            $new_data['store_passwd'] = ($store_passwd);
-            # SORT THE KEY AS BEFORE
-            ksort($new_data);
-            $hash_string="";
-            foreach($new_data as $key=>$value) { $hash_string .= $key.'='.($value).'&'; }
-            $hash_string = rtrim($hash_string,'&');
-            if(md5($hash_string) == $data['verify_sign']) 
+            else
             {
-                return true;
-            } 
-            else 
-            {
-                return false;
+            	$msg = "IPN data missing!";
             }
-        } 
-        else 
-            return false;
-    }
-
-    public function ipnAction($postData){
-        
-        $password = md5($this->getConfigData('pass_word_1'));
-        $result = "No Result";
-        if($this->_request->getPost())
-        {
-            if($this->ipn_hash_varify($password, $postData)) 
-            {
-                $result = "Hash validation success.";
-            }
-            else 
-            {
-                $result = "Hash validation failed.";
-            }
-        }
-        echo $result;
+      	}
+      	else
+      	{
+            $msg = "No IPN Request Found!";
+      	}
+        return $msg;
     }
 
     public function getPostData($orderId)
     {   
-        //TODO: add curency
-        //OutSumCurrency
-        //$order = $observer->getEvent()->getOrder();
-        //Get Object Manager Instance
         $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
         $order = $objectManager->create('Magento\Sales\Model\Order')->loadByIncrementId($orderId); //Use increment id here.
-        //$order->getCustomerName(); 
-        $_objectManager = \Magento\Framework\App\ObjectManager::getInstance(); //instance of\Magento\Framework\App\ObjectManager
+ 
+        $_objectManager = \Magento\Framework\App\ObjectManager::getInstance();
         $storeManager = $_objectManager->get('Magento\Store\Model\StoreManagerInterface'); 
-        //$currentStore = $storeManager->getStore();
-        //$baseUrl = $storeManager->getStore()->getBaseUrl();
     
         $PostData=[];
         $PostData['OutSum']=round($this->getAmount($orderId), 2);
@@ -313,18 +332,43 @@ class Sslcommerz extends AbstractMethod
         $PostData['total_amount']=round($this->getAmount($orderId), 2); 
         $PostData['tran_id']=$orderId;  
         $PostData['currency']=  $storeManager->getStore()->getCurrentCurrency()->getCode(); //$this->getConfigData('currency');
+        
         $PostData['success_url']=$storeManager->getStore()->getBaseUrl().'sslcommerz/payment/response';//$this->getBaseUrl() 
-
         $PostData['fail_url']=$storeManager->getStore()->getBaseUrl().'sslcommerz/payment/fail';
         $PostData['cancel_url']=$storeManager->getStore()->getBaseUrl().'sslcommerz/payment/cancel';
-        
+        $PostData['ipn_url']=$storeManager->getStore()->getBaseUrl().'sslcommerz/payment/ipn';
         
         // CUSTOMER INFORMATION 
-        $PostData['cus_name'] =$order->getCustomerName();   
-        $PostData['cus_email'] =$order->getCustomerEmail();
-        $PostData['cus_phone'] =$order->getBillingAddress()->getTelephone();
-
-        $PostData['Description']="payment for order ".$orderId;
+        $PostData['cus_name']       = $order->getCustomerName();   
+        $PostData['cus_email']      = $order->getCustomerEmail();
+        $PostData['cus_phone']      = $order->getBillingAddress()->getTelephone();
+    	$PostData['cus_add1']       = $order->getBillingAddress()->getStreet()[0];
+    	$PostData['cus_city']       = $order->getBillingAddress()->getCity();
+    	$PostData['cus_state']      = $order->getBillingAddress()->getRegionId();
+    	$PostData['cus_postcode']   = $order->getBillingAddress()->getPostcode();
+    	$PostData['cus_country']    = $order->getBillingAddress()->getCountryId();
+    	
+    	$qntty = count($order->getAllItems());
+        
+        foreach ($order->getAllItems() as $item)
+        {
+            $name[] = $item->getName();
+        }
+        $items = implode($name,',');
+        
+        $PostData['shipping_method']   = 'YES';
+    	$PostData['num_of_item']       = "$qntty";
+    	$PostData['product_name']      = "$items";
+    	$PostData['product_category']  = 'Ecommerce';
+    	$PostData['product_profile']   = 'general';
+    	
+    	# SHIPMENT INFORMATION
+    	$PostData['ship_name']         = $order->getBillingAddress()->getFirstname()." ".$order->getBillingAddress()->getLastname();
+    	$PostData['ship_add1']         = $order->getBillingAddress()->getStreet()[0];
+    	$PostData['ship_city']         = $order->getBillingAddress()->getCity();
+    	$PostData['ship_state']        = $order->getBillingAddress()->getRegionId();
+    	$PostData['ship_postcode']     = $order->getBillingAddress()->getPostcode();
+    	$PostData['ship_country']      = $order->getBillingAddress()->getCountryId();
        
         $handle = curl_init();
 		curl_setopt($handle, CURLOPT_URL, $this->getGateUrl() );
@@ -358,7 +402,8 @@ class Sslcommerz extends AbstractMethod
 		} 
 		else 
 		{
-			echo "JSON Data parsing error!";
+			//echo "JSON Data parsing error!";
+			echo $sslcz['failedreason'];
 		}
 
     }
@@ -378,51 +423,68 @@ class Sslcommerz extends AbstractMethod
         {
         	if($this->sslcommerz_hash_key($pass, $this->_request->getPost()))
         	{
-	            $orderId = $this->_checkoutSession->getLastRealOrderId();
-
-	            if($response['status'] == 'VALID' || $response['status'] == 'VALIDATED') 
-	            {
-	                $store_id = urlencode($this->getConfigData('merchant_id'));
-	                $password = urlencode($this->getConfigData('pass_word_1'));
-	                $val_id = urlencode($response['val_id']);
-	                $risk_level = $response['risk_level'];
-	                $risk_title = $response['risk_title'];
-
-	                $requested_url = $validUrl.'?val_id='.$val_id.'&store_id='.$store_id.'&store_passwd='.$password;
-	              
-	                $handle = curl_init(); 
-	                curl_setopt($handle, CURLOPT_URL,$requested_url);
-	                curl_setopt($handle, CURLOPT_RETURNTRANSFER,true); 
-
-	                $result = curl_exec($handle); 
-
-	                $code = curl_getinfo($handle, CURLINFO_HTTP_CODE);
-
-	                $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-	                $order = $objectManager->create('Magento\Sales\Model\Order')->loadByIncrementId($orderId);
-	                $_objectManager = \Magento\Framework\App\ObjectManager::getInstance(); 
-
-	                if($risk_level == '0')
-	                { 
-	                    $orderState = Order::STATE_PROCESSING;
-	                    $order->setState($orderState, true, 'Gateway has authorized the payment.')->setStatus($orderState);
-	                }
-	                else
-	                {
-	                    $orderState = Order::STATE_HOLDED;
-	                    $order->setState($orderState, true, $risk_title)>setStatus($orderState);
-	                }
-	                $order->save();
-	            }
-	            else
-	            {
-	            	echo "Hash Validation Failed!";
-	            	$this->errorAction();
-	            }
+        	    $state = $this->getSslOrederStatus($response['tran_id']);
+        	    if($state == 'pending_payment')
+        	    {
+	                $orderId = $this->_checkoutSession->getLastRealOrderId();
+    	            if($response['status'] == 'VALID' || $response['status'] == 'VALIDATED') 
+    	            {
+    	                $store_id = urlencode($this->getConfigData('merchant_id'));
+    	                $password = urlencode($this->getConfigData('pass_word_1'));
+    	                $val_id = urlencode($response['val_id']);
+    	                $risk_level = $response['risk_level'];
+    	                $risk_title = $response['risk_title'];
+    
+    	                $requested_url = $validUrl.'?val_id='.$val_id.'&store_id='.$store_id.'&store_passwd='.$password;
+    	              
+    	                $handle = curl_init(); 
+    	                curl_setopt($handle, CURLOPT_URL,$requested_url);
+    	                curl_setopt($handle, CURLOPT_RETURNTRANSFER,true); 
+    
+    	                $result = curl_exec($handle); 
+    
+    	                $code = curl_getinfo($handle, CURLINFO_HTTP_CODE);
+    
+                        if($code == 200 && !( curl_errno($handle)))
+                        {
+                        	# TO CONVERT AS ARRAY
+                        	# $result = json_decode($result, true);
+                        	# $status = $result['status'];
+                        
+                        	# TO CONVERT AS OBJECT
+                        	$result = json_decode($result);
+                        	
+                        	$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+        	                $order = $objectManager->create('Magento\Sales\Model\Order')->loadByIncrementId($orderId);
+        	                $_objectManager = \Magento\Framework\App\ObjectManager::getInstance(); 
+        
+        	                if($risk_level == '0')
+        	                { 
+        	                    $orderState = Order::STATE_PROCESSING;
+        	                    $order->setState($orderState, true, 'Gateway has authorized the payment.')->setStatus($orderState);
+        	                }
+        	                else
+        	                {
+        	                    $orderState = Order::STATE_HOLDED;
+        	                    $order->setState($orderState, true, $risk_title)>setStatus($orderState);
+        	                }
+        	                $order->save();
+                        }
+    	            }
+    	            else
+    	            {
+    	            	echo "Hash Validation Failed!";
+    	            	$this->errorAction();
+    	            }
+        	    }
+        	    else
+        	    {
+        	        echo "Payment Already Done!";
+        	    }
             }
             else 
             {
-                // There is a problem in the response we got
+                echo "There is a problem in the response we got";
                 $this->errorAction();
             }
       	}
