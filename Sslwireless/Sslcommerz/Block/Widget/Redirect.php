@@ -1,12 +1,5 @@
 <?php
 
-/***********
- * © SSLCommerz 2017 
- * Author : SSLCommerz
- * Developed by : Prabal Mallick
- * Email: prabal.mallick@sslwireless.com
- ***********/
-
 namespace Sslwireless\Sslcommerz\Block\Widget;
 
 /**

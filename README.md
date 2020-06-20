@@ -1,15 +1,14 @@
-SSLCOMMERZ- Magento
----------------------------------------------------------------------------------
+## SSLCOMMERZ - Magento
 
 SSLCOMMERZ-Online Payment Gateway For Bangladesh
 
-This Module Work for Magento Version 2.0.* - 2.1.*
+This Module Work for Magento Version 2.1.* - 2.2.*
 
-Installation Steps
+### Installation Steps
 
 Please follow these steps to install the SSLCOMMERZ Payment Gateway module.
 
-Step 1: Download module from Github .
+Step 1: Download module from Github.
 
 Step 2: Log in to your server using FTP or Cpanel.
 
@@ -49,11 +48,13 @@ Step 12: Do a test transaction.
 
 Thank You!
 
+*** Note : If your are using Magento email service then you can use this module.
 
 For any issue, feel free to contact any time.
 
 - Author : SSLCommerz
 - Developed By : Prabal Mallick
+- Email : prabal.mallick@sslwireless.com
 - Team-Email: integration@sslcommerz.com 
 - More info: https://www.sslcommerz.com
 

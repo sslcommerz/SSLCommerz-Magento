@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:Magento:module:Magento_Email:etc/email_templates.xsd">
+    <template id="sslcommerz_success_template" label="Order Successful" file="sslcommerz/successemail.html" type="html" module="Sslwireless_Sslcommerz" area="frontend"/>
+    
+    <template id="sslcommerz_fail_template" label="Order Failed" file="sslcommerz/failemail.html" type="html" module="Sslwireless_Sslcommerz" area="frontend"/>
+    
+    <template id="sslcommerz_cancel_template" label="Order Canceled" file="sslcommerz/cancelemail.html" type="html" module="Sslwireless_Sslcommerz" area="frontend"/>
+</config>

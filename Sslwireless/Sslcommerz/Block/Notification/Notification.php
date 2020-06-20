@@ -1,13 +1,7 @@
 <?php
 
-/***********
- * © SSLCommerz 2017 
- * Author : SSLCommerz
- * Developed by : Prabal Mallick
- * Email: prabal.mallick@sslwireless.com
- ***********/
-
 namespace Sslwireless\Sslcommerz\Block\Notification;
+
 /**
  * Abstract class for Cash On Delivery and Bank Transfer payment method form
  */

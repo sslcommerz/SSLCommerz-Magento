@@ -1,0 +1,27 @@
+<!--@subject Payment Canceled @-->
+<html>
+<head>
+	<title></title>
+</head>
+<body><!--@subject Payment Canceled @-->
+<div>
+<div style="background:#eee;border:1px solid #ccc;padding:5px 10px;">
+<p><span style="font-family:trebuchet ms,helvetica,sans-serif;"><span style="font-size:16px;">Dear {{var full_name}},</span><br />
+<br />
+<span style="font-size:16px;">Sorry! we did not receive your payment for this order. Please check the payment information.</span></span></p>
+
+<h4><span style="font-family:trebuchet ms,helvetica,sans-serif;">Payment Information</span></h4>
+
+<p><span style="font-size:14px;"><span style="font-family: trebuchet ms, helvetica, sans-serif;">Your Order ID : {{var order_id}}<br />
+Payment Method : {{var title}}<br />
+Total Amount : BDT {{var amount}}<br />
+Status : Canceled<br /></span></span><br />
+&nbsp;</p>
+
+<h3>Thank You</h3>
+</div>
+
+<p><!--@subject Payment Failed @--></p>
+</div>
+</body>
+</html>

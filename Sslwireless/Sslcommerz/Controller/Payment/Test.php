@@ -1,11 +1,8 @@
 <?php
-
-/***********
- * © SSLCommerz 2017 
- * Author : SSLCommerz
- * Developed by : Prabal Mallick
- * Email: prabal.mallick@sslwireless.com
- ***********/
+/**
+ * Copyright © 2015 Magento. All rights reserved.
+ * See COPYING.txt for license details.
+ */
 
 namespace Sslwireless\Sslcommerz\Controller\Payment;
 use Magento\Framework\Controller\ResultFactory;
@@ -34,11 +31,19 @@ class Test extends \Magento\Framework\App\Action\Action
      * @return \Magento\Framework\View\Result\Page
      */
     public function execute()
-    {   
-        // $paymentMethod = $this->_objectManager->create('Sslwireless\Sslcommerz\Model\Sslcommerz');
-        // $paymentMethod->errorAction();
+    {   //load model
+        /* @var $paymentMethod \Magento\Authorizenet\Model\DirectPost */
+        $paymentMethod = $this->_objectManager->create('Sslwireless\Sslcommerz\Model\Sslcommerz');
 
-        $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
-        return $resultRedirect->setPath('checkout/onepage/failure', ['_secure' => true]);
+        //get request data
+        $data = $paymentMethod->getCusMail();
+        echo "<pre>";
+        print_r($data);
+        
+        $mail = $this->_objectManager->create('Sslwireless\Sslcommerz\Controller\Payment\Sendemail');
+        $mail->SuccessEmail();
+        $mail->FailEmail();
+        $mail->CancelEmail();
+
     }
 }

@@ -1,12 +1,8 @@
 <?php
-
-/***********
- * © SSLCommerz 2017 
- * Author : SSLCommerz
- * Developed by : Prabal Mallick
- * Email: prabal.mallick@sslwireless.com
- ***********/
-
+/**
+ * Copyright © 2015 Magento. All rights reserved.
+ * See COPYING.txt for license details.
+ */
 namespace Sslwireless\Sslcommerz\Model;
 
 use Magento\Quote\Api\Data\CartInterface;
@@ -176,7 +172,8 @@ class Sslcommerz extends AbstractMethod
      */
     protected function isCarrierAllowed($shippingMethod)
     {
-        return strpos($this->getConfigData('allowed_carrier'), $shippingMethod) !== false;
+        // return strpos($this->getConfigData('allowed_carrier'), $shippingMethod) !== false;
+        return strpos($this->getConfigData('allowed_carrier'), $shippingMethod) !== true;
     }
 
 
@@ -413,6 +410,31 @@ class Sslcommerz extends AbstractMethod
     public function getConfigPaymentData()
     {
         return $this->getConfigData('title');
+    }
+    
+    public function getCusMail()
+    {
+        $orderId = $this->_checkoutSession->getLastRealOrderId();
+        $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+        $order = $objectManager->create('Magento\Sales\Model\Order')->loadByIncrementId($orderId);
+
+        $PostData['order_id'] = $orderId;
+        $PostData['cus_email'] = $order->getCustomerEmail();
+        $PostData['url'] = $this->getConfigData('test');
+        $PostData['total_amount'] = round($this->getAmount($orderId), 2); 
+        $PostData['cus_name'] = $order->getCustomerName();
+        $PostData['cus_phone'] = $order->getBillingAddress()->getTelephone();
+        $PostData['title'] = $this->getConfigData('title');
+        $PostData['full_name'] = $order->getBillingAddress()->getFirstname()." ".$order->getBillingAddress()->getLastname();
+        $PostData['country'] = $order->getBillingAddress()->getCountryId();
+        
+        // $PostData['company'] = $order->getBillingAddress()->getCompany();
+        $PostData['street'] = $order->getBillingAddress()->getStreet();
+        $PostData['region'] = $order->getBillingAddress()->getRegionId();
+        $PostData['city'] = $order->getBillingAddress()->getCity().", ".$order->getBillingAddress()->getPostcode();
+        $PostData['telephone'] = $order->getBillingAddress()->getTelephone();
+
+        return $PostData;
     }
 
     public function errorAction()

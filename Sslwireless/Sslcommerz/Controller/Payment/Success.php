@@ -1,11 +1,8 @@
 <?php
-
-/***********
- * © SSLCommerz 2017 
- * Author : SSLCommerz
- * Developed by : Prabal Mallick
- * Email: prabal.mallick@sslwireless.com
- ***********/
+/**
+ * Copyright © 2015 Magento. All rights reserved.
+ * See COPYING.txt for license details.
+ */
 
 namespace Sslwireless\Sslcommerz\Controller\Payment;
 use Magento\Framework\Controller\ResultFactory;
@@ -35,6 +32,13 @@ class Success extends \Magento\Framework\App\Action\Action
      */
     public function execute()
     {   
+        $mail = $this->_objectManager->create('Sslwireless\Sslcommerz\Controller\Payment\Sendemail');
+        
+        $whitelist = array('127.0.0.1','::1');
+        if(!in_array($_SERVER['REMOTE_ADDR'], $whitelist)){
+		    $mail->SuccessEmail();
+		}
+        // $mail->SuccessEmail();
         return $this->resultPageFactory->create();
     }
 }

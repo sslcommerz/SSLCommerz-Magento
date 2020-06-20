@@ -1,0 +1,30 @@
+<!--@subject Payment Successful @-->
+<html>
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title></title>
+</head>
+<body>
+<div style="background:#eee;border:1px solid #ccc;padding:5px 10px;">
+<p><span style="font-family:trebuchet ms,helvetica,sans-serif;"><span style="font-size:16px;">Dear {{var full_name}},</span><br />
+<br />
+<span style="font-size:16px;">We have just received your payment for this order. You have been charged with <strong>BDT {{var amount}} </strong>. Please check the below invoice.</span></span></p>
+
+<h4><span style="font-family:trebuchet ms,helvetica,sans-serif;">Payment Information</span></h4>
+
+<p><span style="font-size:14px;"><span style="font-family: trebuchet ms, helvetica, sans-serif;">Your Order ID : {{var order_id}}<br />
+Payment Method : {{var title}}<br />
+Total Amount : BDT {{var amount}}<br />
+Status : Success</span></span><br /></p>
+
+<h4><span style="font-family:trebuchet ms,helvetica,sans-serif;">Billing Information</span></h4>
+
+<p><span style="font-size:14px;"><span style="font-family: trebuchet ms, helvetica, sans-serif;">Customer Name : {{var full_name}}<br />
+Country ID : {{var country}}<br />
+Street : {{var street}}, {{var region}}<br />
+City : {{var city}}<br />
+Telephone : {{var telephone}}</span></span></p>
+<br><br>
+<h3>Thank You</h3>
+</div>
+</body>
+</html>
