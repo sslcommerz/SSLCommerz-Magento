@@ -18,7 +18,7 @@ class Sslcommerz extends \Magento\Payment\Block\Form
     protected $_instructions;
 
 
-    protected $_template = 'form/sslcommerz.phtml';
+    // protected $_template = 'form/sslcommerz.phtml';
 
     /**
      * Get instructions text from config
