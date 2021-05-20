@@ -299,6 +299,58 @@ class Sslcommerz extends AbstractMethod
 	                if($tran_status == 'VALID' || $tran_status == 'VALIDATED')
 	                { 
 	                    $orderState = Order::STATE_PROCESSING;
+                        
+                        
+                        try 
+                        {
+                            if(!$order->hasInvoices())  
+                            {
+                                if($order->canInvoice())
+                              
+                                {    
+                                    
+                                    $invoice = $objectManager->create('Magento\Sales\Model\Service\InvoiceService')->prepareInvoice($order);
+                                    
+                                    
+                                     
+                                    if (!$invoice->getTotalQty()) 
+                                    {
+                                        //No Quantity Found
+                                    } 
+                                    
+                                    
+                                    $invoice->setRequestedCaptureCase(\Magento\Sales\Model\Order\Invoice::CAPTURE_ONLINE);
+                                    
+                                    $invoice->register();
+                                   
+                                    $transaction = $objectManager->create('Magento\Framework\DB\Transaction')
+                                    ->addObject($invoice)
+                                    ->addObject($invoice->getOrder());
+                            
+                                $transaction->save(); 
+                                
+                                /***Invoice Mail Send***/
+                                
+                                #$invoiceSender = $objectManager->get('\Magento\Sales\Model\Order\Email\Sender\InvoiceSender')->send($invoice);
+                                
+                                }
+                            }
+                            
+                            else
+                            {
+                                // Already Invoice
+                            }
+                        }                      
+                        catch (Exception $e) 
+                        {
+                            
+                             echo $e->getMessage();
+                             
+                        }
+                        
+                        
+                        
+                        
 	                    $order->setState($orderState, true, 'Payment Validated by IPN')->setStatus($orderState);
 	                    $msg = "Payment Validated by IPN";
 	                }
@@ -357,7 +409,8 @@ class Sslcommerz extends AbstractMethod
         {
             $name[] = $item->getName();
         }
-        $items = implode($name,',');
+        $items = implode(',',$name);
+        
         
         $PostData['shipping_method']   = 'YES';
     	$PostData['num_of_item']       = "$qntty";
@@ -465,11 +518,62 @@ class Sslcommerz extends AbstractMethod
         	                { 
         	                    $orderState = Order::STATE_PROCESSING;
         	                    $order->setState($orderState, true, 'Gateway has authorized the payment.')->setStatus($orderState);
+                                
+                                try 
+                                {
+                                    if(!$order->hasInvoices())  
+                                    {
+                                        if($order->canInvoice())
+                                      
+                                        {    
+                                            
+                                            $invoice = $objectManager->create('Magento\Sales\Model\Service\InvoiceService')->prepareInvoice($order);
+                                            
+                                            
+                                             
+                                            if (!$invoice->getTotalQty()) 
+                                            {
+                                                //No Quantity Found
+                                            } 
+                                            
+                                            
+                                            $invoice->setRequestedCaptureCase(\Magento\Sales\Model\Order\Invoice::CAPTURE_ONLINE);
+                                            
+                                            $invoice->register();
+                                           
+                                            $transaction = $objectManager->create('Magento\Framework\DB\Transaction')
+                                            ->addObject($invoice)
+                                            ->addObject($invoice->getOrder());
+                                    
+                                        $transaction->save();
+                                        
+                                        /***Invoice Mail Send***/
+                                        
+                                        #$invoiceSender = $objectManager->get('\Magento\Sales\Model\Order\Email\Sender\InvoiceSender')->send($invoice);
+                                        
+                                        }
+                                    }
+                                    
+                                    else
+                                    {
+                                        // Already Invoice
+                                    }
+                                }                      
+                                catch (Exception $e) 
+                                {
+                                    
+                                     echo $e->getMessage();
+                                     
+                                }
+                                
+                                
         	                }
         	                else
         	                {
-        	                    $orderState = Order::STATE_HOLDED;
-        	                    $order->setState($orderState, true, $risk_title)>setStatus($orderState);
+        	                    $orderState = Order::STATE_HOLDED; 
+                                
+        	                    #$order->setState($orderState, true, $risk_title)>setStatus($orderState);
+                                $order->setState($orderState, true, $risk_title)->setStatus($orderState);
         	                }
         	                $order->save();
                         }
