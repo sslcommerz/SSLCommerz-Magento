@@ -357,7 +357,7 @@ class Sslcommerz extends AbstractMethod
         {
             $name[] = $item->getName();
         }
-        $items = implode($name,',');
+        $items = implode(',', $name);
         
         $PostData['shipping_method']   = 'YES';
     	$PostData['num_of_item']       = "$qntty";
@@ -469,7 +469,7 @@ class Sslcommerz extends AbstractMethod
         	                else
         	                {
         	                    $orderState = Order::STATE_HOLDED;
-        	                    $order->setState($orderState, true, $risk_title)>setStatus($orderState);
+        	                    $order->setState($orderState, true, $risk_title)->setStatus($orderState);
         	                }
         	                $order->save();
                         }
